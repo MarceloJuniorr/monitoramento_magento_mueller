@@ -1,5 +1,13 @@
 import { createPool } from 'mysql2/promise';
 import config from '../config.js'
+import { parse, format } from 'date-fns';
+
+function converterData(dataStr) {
+    // Parse a data no formato 'MMM d, yyyy hh:mm:ss aa'
+    const parsedDate = parse(dataStr, 'MMM d, yyyy hh:mm:ss aa', new Date());
+    // Formatar a data no formato 'yyyyMMdd'
+    return format(parsedDate, 'yyyyMMdd');
+}
 
 
 const pool = createPool(config.database);
@@ -39,10 +47,10 @@ async function inserirPedidosMagento(pedido) {
 
     const insertData = {
       pedido: pedido['Id.'],
-      data: pedido['Data da Compra'],
+      data_origin: pedido['Data da Compra'],
+      data: converterData(pedido['Data da Compra']),
       situacao: pedido['Situação'],
-      grupo_cliente: pedido['Grupo de clientes']
-      
+      grupo_cliente: pedido['Grupo de clientes']      
     };
 
     const fields = Object.keys(insertData);
@@ -75,7 +83,8 @@ async function verificacaoTabelas() {
       const sqlCriarTabelaMagento = `
       CREATE TABLE IF NOT EXISTS ${config.database.name}.${config.tabelaMagento} (
         pedido         varchar(100),
-        data           varchar(200),
+        data_origin    varchar(100),
+        data           varchar(100),
         situacao       varchar(100),
         grupo_cliente  varchar(100),
         primary key    (pedido)
